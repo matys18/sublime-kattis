@@ -1,0 +1,6 @@
+[
+    { 
+        "caption": "sublime-kattis: Submit solution",
+        "command": "kattis" 
+    }
+]
