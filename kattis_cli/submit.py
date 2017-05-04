@@ -177,27 +177,9 @@ def open_submission(submit_response, cfg):
             url = '%s/%s' % (submissions_url, submission_id)
             webbrowser.open(url)
 
-
-def main():
-    parser = argparse.ArgumentParser(description='Submit a solution to Kattis')
-    parser.add_argument('-p', '--problem',
-                   help=''''Which problem to submit to.
-Overrides default guess (first part of first filename)''')
-    parser.add_argument('-m', '--mainclass',
-                   help='''Sets mainclass.
-Overrides default guess (first part of first filename)''')
-    parser.add_argument('-l', '--language',
-                   help='''Sets language.
-Overrides default guess (based on suffix of first filename)''')
-    parser.add_argument('-t', '--tag',
-                   help=argparse.SUPPRESS)
-    parser.add_argument('-f', '--force',
-                   help='Force, no confirmation prompt before submission',
-                   action='store_true')
-    parser.add_argument('files', nargs='+')
-
-    args = parser.parse_args()
-    files = args.files
+# Pass in a list of file paths
+def main(files):
+    #files = args.files
 
     try:
         cfg = get_config()
@@ -291,7 +273,3 @@ extension "%s"''' % (ext,))
         open_submission(plain_result, cfg)
     except configparser.NoOptionError:
         pass
-
-
-if __name__ == '__main__':
-    main()
