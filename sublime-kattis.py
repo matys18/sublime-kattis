@@ -7,7 +7,6 @@ import os
 class KattisCommand(sublime_plugin.WindowCommand):
     
     def run(self):
-        kattis-cli.kek
         self.loading_key = "sublime-kattis-loading"
         submission_info = self.prepare_submission()
         #self.display_confirm_dialog(submission_info)
