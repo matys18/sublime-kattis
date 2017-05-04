@@ -42,19 +42,21 @@ class Kattis:
         self.cfg = self.read_config()
         self.credentials = self.login_with_config()
 
-    def submit_solution(self, path):
-        """Submit a solution to Kattis"""
+    def prepare_submission(self, path):
         files = [path]
         language = self.guess_language(path)
         mainclass = self.guess_class(path, language)
         problem = self.guess_problem(path)
+        return KattisSubmission(problem, language, files, mainclass)
 
+    def submit_solution(self, submission):
+        """Submit a solution to Kattis"""
         submission_res = self.submit(
             self.credentials,
-            problem,
-            language,
-            files,
-            mainclass
+            submission.problem,
+            submission.language,
+            submission.files,
+            submission.mainclass
         )
         return submission_res
 
@@ -166,6 +168,15 @@ class Kattis:
             return cfg.get('kattis', option)
         else:
             return 'https://%s/%s' % (cfg.get('kattis', 'hostname'), default)
+
+
+class KattisSubmission:
+
+    def __init__(self, problem, language, files, mainclass):
+        self.problem = problem
+        self.language = language
+        self.files = files
+        self.mainclass = mainclass
 
 
 class KattisException(Exception):
