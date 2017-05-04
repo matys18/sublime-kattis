@@ -19,9 +19,11 @@ class KattisCommand(sublime_plugin.WindowCommand):
         self.window.status_message("Submitting to Kattis")
         variables = self.window.extract_variables()
         path = os.path.join(variables["file_path"], variables["file_name"])
-        res = Kattis(path).submit_solution()
-        print(res)
-        self.window.status_message("Submission successful!")
+        try:
+            res = Kattis().submit_solution(path)
+            self.window.status_message("Submission successful!")
+        except Exception:
+            self.window.status_message("Submission failed!")
         
 
 
