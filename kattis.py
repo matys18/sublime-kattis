@@ -1,3 +1,6 @@
+import sys
+import os
+import requests
 
 if sys.version_info[0] >= 3:
     # Python 3
@@ -13,14 +16,8 @@ class KattisConfig:
     and creating KattisConfig objects that can be passed to the L{KattisClient}
     """
 
-    def create_from_file():
-        """
-        This is a convenience method that provides a default
-        path for L{load_from_file(path)}
-        """
-        return load_from_file("/usr/local/etc/kattisrc")
-
-    def create_from_file(path):
+    @staticmethod
+    def create_from_file(path="/usr/local/etc/kattisrc"):
         """
         Loads a KattisConfig from a .kattisrc file. Looks in the given path,
         the current directory, and the home directory of the current user
@@ -44,12 +41,30 @@ class KattisConfig:
             raise KattisConfigException(
                 "Could not locate .kattisrc! Make sure it is placed under your home directory!")
 
+        username = token = password = loginurl = submissionurl = None
+
         try:
-            username = cfg.read("user", "username")
-            token = cfg.read("user", "token")
-            password = cfg.read("user", "password")
-            loginurl = cfg.read("kattis", "loginurl")
-            submissionurl = cfg.read("kattis", "submissionurl")
+            username = cfg.get("user", "username")
+        except configparser.NoOptionError:
+            pass
+
+        try:
+            token = cfg.get("user", "token")
+        except configparser.NoOptionError:
+            pass
+
+        try:
+            password = cfg.get("user", "password")
+        except configparser.NoOptionError:
+            pass
+
+        try:
+            loginurl = cfg.get("kattis", "loginurl")
+        except configparser.NoOptionError:
+            pass
+
+        try:
+            submissionurl = cfg.get("kattis", "submissionurl")
         except configparser.NoOptionError:
             pass
 
@@ -116,6 +131,7 @@ class KattisSubmission:
 
     GUESS_MAINCLASS = {'Java', 'Python'}
 
+    @staticmethod
     def create_from_file(files):
         """
         Creates a new KattisSubmission from the given files
@@ -131,15 +147,16 @@ class KattisSubmission:
         """
         if len(files) == 0:
             raise KattisSubmissionException(
-                "No files provided. Make sure your file list is not empty.")
+                "No files provided. Make sure your file list is not empty")
 
         problem, ext = os.path.splitext(os.path.basename(files[0]))
-        language = LANGUAGE_GUESS.get(ext, None)
+        print(ext)
+        language = KattisSubmission.LANGUAGE_GUESS.get(ext, None)
         if language is None:
             raise KattisSubmissionException(
                 "Could not guess submission language. Make sure your files have the correct extensions")
 
-        mainclass = problem if language in GUESS_MAINCLASS else None
+        mainclass = problem if language in KattisSubmission.GUESS_MAINCLASS else None
 
         return KattisSubmission(problem, language, files, mainclass)
 
@@ -165,6 +182,39 @@ class KattisSubmission:
         self.mainclass = mainclass
 
 
+class KattisSubmissionResult:
+    """
+    Contains logic for handling successful submission results.
+    """
+
+    @staticmethod
+    def create_from_response(response):
+        """
+        Creates a new submission result from the response object.
+
+        @rtype: KattisSubmissionResult
+        @return: The submission result object created from the response
+        """
+        return KattisSubmissionResult(problem_id, text)
+
+    def __init__(self, problem_id, text, link):
+        """
+        Instantiates a new KattisSubmissionResult object with the given parameters.
+
+        @type problem_id: String
+        @param problem_id: The id of the problem of the submission
+
+        @type text: String
+        @param: The response text of the submission
+
+        @tyle link: String
+        @param link: The link to the result page
+        """
+        self.problem_id = problem_id
+        self.text = text
+        self.link = link
+
+
 class KattisException(Exception):
     pass
 
@@ -176,6 +226,6 @@ class KattisConfigException(KattisException):
 class KattisSubmissionException(KattisException):
     pass
 
+
 class KattisClientException(KattisException):
     pass
-
