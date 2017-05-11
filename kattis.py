@@ -117,7 +117,7 @@ class KattisSubmission:
         '.cc': 'C++',
         '.cxx': 'C++',
         '.c++': 'C++',
-        '.py': 'Python',
+        '.py': 'Python 3',
         '.cs': 'C#',
         '.c#': 'C#',
         '.go': 'Go',
@@ -150,7 +150,6 @@ class KattisSubmission:
                 "No files provided. Make sure your file list is not empty")
 
         problem, ext = os.path.splitext(os.path.basename(files[0]))
-        print(ext)
         language = KattisSubmission.LANGUAGE_GUESS.get(ext, None)
         if language is None:
             raise KattisSubmissionException(
@@ -192,27 +191,125 @@ class KattisSubmissionResult:
         """
         Creates a new submission result from the response object.
 
+        @type response: Requests response
+        @param response: Response object of a returned by a submission request. 
+
         @rtype: KattisSubmissionResult
         @return: The submission result object created from the response
         """
-        return KattisSubmissionResult(problem_id, text)
+        split = response.text.split(" ")
+        submission_id = split[len(split) - 1][:-1]
+        message = response.text
+        link = config.submissionurl[:-7] + "/submissions/" + submission_id
 
-    def __init__(self, problem_id, text, link):
+        return KattisSubmissionResult(submission_id, message, link)
+
+    def __init__(self, submission_id, text, link):
         """
         Instantiates a new KattisSubmissionResult object with the given parameters.
 
-        @type problem_id: String
-        @param problem_id: The id of the problem of the submission
+        @type submission_id: String
+        @param submission_id: The id of the problem of the submission
 
         @type text: String
         @param: The response text of the submission
 
-        @tyle link: String
+        @type link: String
         @param link: The link to the result page
         """
-        self.problem_id = problem_id
+        self.submission_id = submission_id
         self.text = text
         self.link = link
+
+
+class KattisClient:
+    """
+    A client for executing Kattis requests
+    """
+
+    HEADERS = {'User-Agent': 'kattis-cli-submit'}
+
+    @staticmethod
+    def create_from_config(kattis_config):
+        """
+        Authenticates the user with the given KattisConfig
+
+        @type kattis_config: KattisConfig
+        @param kattis_config: The KattisConfig used to authenticate with Kattis
+
+        @rtype: KattisClient
+        @return: The authenticated KattisClient
+        """
+        if kattis_config is None:
+            raise KattisClientException(
+                "No config provided. Make sure you are not passing None values")
+
+        if kattis_config.password is None and kattis_config.token is None:
+            raise KattisConfigError(
+                "Your .kattisrc seems to be corrupted. Please download a new one.")
+
+        login_args = {'user': kattis_config.username, 'script': 'true'}
+        if kattis_config.password:
+            login_args['password'] = kattis_config.password
+        if kattis_config.token:
+            login_args['token'] = kattis_config.token
+
+        res = requests.post(kattis_config.loginurl,
+                            data=login_args, headers=KattisClient.HEADERS)
+        if not res.status_code == 200:
+            raise KattisLoginError(
+                "Could not log in to Kattis. Status code: " + res.status.code)
+
+        return KattisClient(kattis_config, res.cookies)
+
+    def __init__(self, kattis_config, auth_cookies):
+        """
+        Instantiate a new KattisClient object
+
+        @type kattis_config: KattisConfig
+        @param kattis_config: The configuration of the client
+
+        @type auth_cookies: Dict
+        @param auth_cookies: The authentication cookies obtained from Kattis
+        """
+        self.config = kattis_config
+        self.auth_cookies = auth_cookies
+
+    def submit_solution(self, kattis_submission):
+        """
+        Submits a solution to Kattis. Returns a KattisSubmissionResult on success,
+        otherwise throws a KattisClientException.
+
+        @type kattis_submission: KattisSubmission
+        @param kattis_submission: The Kattis
+
+        @raise KattisClientException: Raised when the submission is unsucessful
+                                      (return code is not 200)
+
+        @rtype: KattisSubmissionResult
+        @return: The successful result of the submission
+        """
+        data = {'submit': 'true',
+                'submit_ctr': 2,
+                'language': kattis_submission.language,
+                'mainclass': kattis_submission.mainclass,
+                'problem': kattis_submission.problem,
+                'tag': '',
+                'script': 'true'}
+
+        sub_files = []
+        for f in kattis_submission.files:
+            with open(f) as sub_file:
+                sub_files.append(('sub_file[]',
+                                  (os.path.basename(f),
+                                   sub_file.read(),
+                                   'application/octet-stream')))
+
+        response = requests.post(
+            self.config.submissionurl, data=data, files=sub_files,
+            cookies=self.auth_cookies, headers=KattisClient.HEADERS)
+
+        return KattisSubmissionResult.create_from_response(response)
 
 
 class KattisException(Exception):
@@ -229,3 +326,12 @@ class KattisSubmissionException(KattisException):
 
 class KattisClientException(KattisException):
     pass
+
+"""
+config = KattisConfig.create_from_file()
+client = KattisClient.create_from_config(config)
+submission = KattisSubmission.create_from_file(["hello.py"])
+result = client.submit_solution(submission)
+print(result.text)
+print(result.link)
+"""
