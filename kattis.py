@@ -326,12 +326,3 @@ class KattisSubmissionException(KattisException):
 
 class KattisClientException(KattisException):
     pass
-
-"""
-config = KattisConfig.create_from_file()
-client = KattisClient.create_from_config(config)
-submission = KattisSubmission.create_from_file(["hello.py"])
-result = client.submit_solution(submission)
-print(result.text)
-print(result.link)
-"""
