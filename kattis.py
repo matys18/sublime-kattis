@@ -149,6 +149,10 @@ class KattisSubmission:
             raise KattisSubmissionException(
                 "No files provided. Make sure your file list is not empty")
 
+        for file in files:
+            if not os.path.isfile(file):
+                raise KattisSubmissionException("One or more of the given files do not exist")
+
         problem, ext = os.path.splitext(os.path.basename(files[0]))
         language = KattisSubmission.LANGUAGE_GUESS.get(ext, None)
         if language is None:
@@ -187,12 +191,15 @@ class KattisSubmissionResult:
     """
 
     @staticmethod
-    def create_from_response(response):
+    def create_from_response(response, config):
         """
         Creates a new submission result from the response object.
 
         @type response: Requests response
-        @param response: Response object of a returned by a submission request. 
+        @param response: Response object of a returned by a submission request.
+
+        @type config: KattisConfig
+        @param config: The configuration of the client. Used to generate a submission link.
 
         @rtype: KattisSubmissionResult
         @return: The submission result object created from the response
@@ -245,7 +252,7 @@ class KattisClient:
                 "No config provided. Make sure you are not passing None values")
 
         if kattis_config.password is None and kattis_config.token is None:
-            raise KattisConfigError(
+            raise KattisConfigException(
                 "Your .kattisrc seems to be corrupted. Please download a new one.")
 
         login_args = {'user': kattis_config.username, 'script': 'true'}
@@ -257,8 +264,8 @@ class KattisClient:
         res = requests.post(kattis_config.loginurl,
                             data=login_args, headers=KattisClient.HEADERS)
         if not res.status_code == 200:
-            raise KattisLoginError(
-                "Could not log in to Kattis. Status code: " + res.status.code)
+            raise KattisClientException(
+                "Could not log in to Kattis. Status code: " + str(res.status_code))
 
         return KattisClient(kattis_config, res.cookies)
 
@@ -309,7 +316,11 @@ class KattisClient:
             self.config.submissionurl, data=data, files=sub_files,
             cookies=self.auth_cookies, headers=KattisClient.HEADERS)
 
-        return KattisSubmissionResult.create_from_response(response)
+        if not response.status_code == 200:
+            raise KattisClientException(
+                "Could not submit to Kattis. Status code: " + str(res.status_code))
+
+        return KattisSubmissionResult.create_from_response(response, self.config)
 
 
 class KattisException(Exception):
