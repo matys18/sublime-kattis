@@ -4,8 +4,7 @@ import subprocess
 import os
 import sys
 
-from sublime_kattis.kattis import (KattisConfig, KattisClient, KattisSubmission,
-                                   KattisSubmissionResult, KattisException)
+from sublime_kattis.kattis import *
 
 
 class KattisCommand(sublime_plugin.WindowCommand):

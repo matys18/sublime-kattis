@@ -187,12 +187,15 @@ class KattisSubmissionResult:
     """
 
     @staticmethod
-    def create_from_response(response):
+    def create_from_response(response, config):
         """
         Creates a new submission result from the response object.
 
         @type response: Requests response
-        @param response: Response object of a returned by a submission request. 
+        @param response: Response object of a returned by a submission request.
+
+        @type config: KattisConfig
+        @param config: The configuration of the client. Used to generate a submission link.
 
         @rtype: KattisSubmissionResult
         @return: The submission result object created from the response
@@ -309,7 +312,7 @@ class KattisClient:
             self.config.submissionurl, data=data, files=sub_files,
             cookies=self.auth_cookies, headers=KattisClient.HEADERS)
 
-        return KattisSubmissionResult.create_from_response(response)
+        return KattisSubmissionResult.create_from_response(response, self.config)
 
 
 class KattisException(Exception):
