@@ -26,7 +26,9 @@ class KattisCommand(sublime_plugin.WindowCommand):
             config = KattisConfig.create_from_file()
             submission = KattisSubmission.create_from_file([path])
 
-            self.display_confirm_dialog(submission)
+            go_on = self.display_confirm_dialog(submission)
+            if not go_on:
+                return
 
             client = KattisClient.create_from_config(config)
             result = client.submit_solution(submission)
