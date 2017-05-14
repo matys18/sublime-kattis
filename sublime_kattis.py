@@ -19,7 +19,7 @@ class KattisCommand(sublime_plugin.WindowCommand):
         """
         Submits the current file to Kattis
         """
-        self.window.status_message("Submitting to Kattis")
+        #self.window.status_message("Submitting to Kattis")
         variables = self.window.extract_variables()
         path = os.path.join(variables["file_path"], variables["file_name"])
         try:

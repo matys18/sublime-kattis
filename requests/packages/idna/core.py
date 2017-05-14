@@ -156,9 +156,9 @@ def valid_contextj(label, pos):
         ok = False
         for i in range(pos-1, -1, -1):
             joining_type = idnadata.joining_types.get(ord(label[i]))
-            if joining_type == ord('T'):
+            if joining_type == 'T':
                 continue
-            if joining_type in [ord('L'), ord('D')]:
+            if joining_type in ['L', 'D']:
                 ok = True
                 break
 
@@ -168,9 +168,9 @@ def valid_contextj(label, pos):
         ok = False
         for i in range(pos+1, len(label)):
             joining_type = idnadata.joining_types.get(ord(label[i]))
-            if joining_type == ord('T'):
+            if joining_type == 'T':
                 continue
-            if joining_type in [ord('R'), ord('D')]:
+            if joining_type in ['R', 'D']:
                 ok = True
                 break
         return ok
@@ -211,9 +211,9 @@ def valid_contexto(label, pos, exception=False):
         for cp in label:
             if cp == u'\u30fb':
                 continue
-            if _is_script(cp, 'Hiragana') or _is_script(cp, 'Katakana') or _is_script(cp, 'Han'):
-                return True
-        return False
+            if not _is_script(cp, 'Hiragana') and not _is_script(cp, 'Katakana') and not _is_script(cp, 'Han'):
+                return False
+        return True
 
     elif 0x660 <= cp_value <= 0x669:
         for cp in label:
@@ -261,12 +261,12 @@ def alabel(label):
         label = label.encode('ascii')
         try:
             ulabel(label)
-        except IDNAError:
+        except:
             raise IDNAError('The label {0} is not a valid A-label'.format(label))
         if not valid_label_length(label):
             raise IDNAError('Label too long')
         return label
-    except UnicodeEncodeError:
+    except UnicodeError:
         pass
 
     if not label:
@@ -288,7 +288,7 @@ def ulabel(label):
     if not isinstance(label, (bytes, bytearray)):
         try:
             label = label.encode('ascii')
-        except UnicodeEncodeError:
+        except UnicodeError:
             check_label(label)
             return label
 

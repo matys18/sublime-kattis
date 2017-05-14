@@ -1,6 +1,6 @@
 import sys
 import os
-import requests
+import sublime_kattis.requests as requests
 
 if sys.version_info[0] >= 3:
     # Python 3
@@ -32,9 +32,12 @@ class KattisConfig:
         """
         cfg = configparser.ConfigParser()
 
+        print(os.path.expanduser("~"))
+
         if not cfg.read([
             path,
             os.path.join(os.getenv('HOME'), '.kattisrc'),
+            os.path.join(os.path.expanduser("~"), '.kattisrc'),
             os.path.join(os.path.dirname(
                 os.path.realpath(__file__)), '.kattisrc')
         ]):

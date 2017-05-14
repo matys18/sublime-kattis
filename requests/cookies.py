@@ -19,6 +19,8 @@ from .compat import cookielib, urlparse, urlunparse, Morsel
 
 try:
     import threading
+    # grr, pyflakes: this fixes "redefinition of unused 'threading'"
+    threading
 except ImportError:
     import dummy_threading as threading
 
